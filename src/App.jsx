@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { DragDropContext, Droppable } from 'react-beautiful-dnd';
+import React, { useState, useCallback } from "react";
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 // ant core
 import {
@@ -13,11 +13,10 @@ import {
 
 // ant icons
 import { PlusOutlined } from "@ant-design/icons";
+import { data } from "./mocks/data";
+import TrelloList from "./components/TrelloList";
 
 // components
-import TrelloList from "./components/TrelloList";
-import { data } from "./mocks/data";
-
 const { TextArea } = Input;
 const { Option } = Select;
 
@@ -33,72 +32,7 @@ function App() {
   const [form] = Form.useForm();
   const [open, setOpen] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
-  const [todos, setTodos] = useState(data)
-
-  // using useCallback is optional
-  const onDragEnd = (data) => {
-    // the only one that is required
-    console.log("onDragEnd", data)
-
-    const { source, destination, type } = data;
-
-    if(!destination) return;
-
-    // drag & drop LIST
-    if(type === 'LIST') {
-      const clonedColumns = [...todos.columns];
-      const columnRemove = clonedColumns.splice(source.index, 1)[0];
-      clonedColumns.splice(destination.index, 0, columnRemove);
-
-      setTodos(prevState => ({
-        ...prevState,
-        columns: clonedColumns
-      }))
-      return;
-    }
-
-    // card
-    // drag & drop card in same list
-    if(source.droppableId === destination.droppableId) {
-      const clonedCards = [...todos.lists[source.droppableId].cards];
-      const itemRemoved = clonedCards.splice(source.index, 1)[0];
-      clonedCards.splice(destination.index, 0, itemRemoved);
-      setTodos(prevState => {
-        return {
-          ...prevState,
-          lists: {
-            ...prevState.lists,
-            [source.droppableId]: {
-              ...prevState.lists[source.droppableId],
-              cards: clonedCards
-            }
-          }
-        }
-      })
-
-      return
-    }
-
-     // drag & drop card in difference list
-  }
-
-  function handleAddList() {
-    const listItem = {
-      id: `List${Date.now()}`,
-      name: `List 1 ${Date.now()}`,
-      cards: []
-    }
-    setTodos(prevState => {
-      return {
-        ...prevState,
-        columns: [...prevState.columns, listItem.id],
-        lists: {
-          ...prevState.lists,
-          [listItem.id]: listItem
-        }
-      }
-    })
-  }
+  const [trello, setTrello] = useState(data);
 
   const handleSubmit = (values) => {
     console.log("values: ", values);
@@ -114,7 +48,39 @@ function App() {
     console.log(`selected ${value}`);
   };
 
-  console.log('todos: ', todos)
+ 
+  const onDragEnd = (event) => {
+    // the only one that is required
+    console.log('onDragEnd', event);
+    const { source, destination, type } = event;
+    
+    if(!destination) return;
+
+    // drag & drop list
+    if(type === 'LIST') {
+      setTrello(prevState => {
+        const newColumnOrder = [...prevState.columns]
+        const listSpiced = newColumnOrder.splice(source.index, 1); 
+        newColumnOrder.splice(destination.index, 0, ...listSpiced);
+        return {
+          ...prevState,
+          columns: newColumnOrder
+        }
+      })
+      return;
+    }
+
+    // drag & drop card same list
+    if(source.droppableId === destination.droppableId) {
+
+      return;
+    }
+
+     // drag & drop card difference list
+    // ???
+  }
+
+  console.log('trello: ', trello)
 
   return (
     <>
@@ -134,7 +100,7 @@ function App() {
         <DragDropContext
           onDragEnd={onDragEnd}
         >
-          <Droppable droppableId="all-lists" direction="horizontal" type="LIST">
+          <Droppable droppableId="lists" direction="horizontal" type="LIST">
             {(provided, snapshot) => (
               <div
                 ref={provided.innerRef}
@@ -142,29 +108,29 @@ function App() {
                 {...provided.droppableProps}
                 className="listContainer"
               >
-                {todos.columns.map((listId, listIndex) => {
-                  const listItem = todos.lists[listId];
-                  const cards = listItem.cards.map(cardId => todos.cards[cardId]);
+                {trello.columns.map((listId, listIndex) => {
+                  const listItem = trello.lists[listId];
+                  const cards = listItem.cards.map(cardId => trello.cards[cardId])
 
                   return (
-                    <TrelloList 
-                      key={listItem.id}
+                    <TrelloList
+                      key={listId}
                       index={listIndex}
-                      listItem={listItem}
                       cards={cards}
+                      listItem={listItem}
                     />
                   )
                 })}
-        
+                
                 {provided.placeholder}
-                <Button type="text" onClick={handleAddList}>
+                <Button type="text">
                   <PlusOutlined /> Add another list
                 </Button>
               </div>
             )}
           </Droppable>
         </DragDropContext>
-         
+          
         </div>
       </main>
 

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Draggable, Droppable } from 'react-beautiful-dnd';
+import React from "react";
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 // ant core
 import {
@@ -12,23 +12,20 @@ import {
 // ant icons
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 
-// components
 import SimpleCard from "./SimpleCard";
 
-function TrelloList({ index, listItem, cards }) {
+
+function TrelloList({ index, listItem, cards}) {
   return (
-    <Draggable
-      draggableId={String(listItem.id)}
-      index={index}
-    >
+    <Draggable draggableId={listItem.id.toString()} index={index}>
       {(provided) => (
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className='todoList'
+          className="todoList"
         >
-          <Droppable droppableId={String(listItem.id)} type="CARD">
+          <Droppable droppableId={listItem.id.toString()} type="CARD">
             {(provided, snapshot) => (
               <Card
                 title={listItem.name}
@@ -42,7 +39,7 @@ function TrelloList({ index, listItem, cards }) {
                         onClick={() => setOpen(true)}
                       />
                     </Tooltip>
-
+    
                     <Popconfirm
                       title="Delete the list"
                       description="Are you sure to delete this list?"
@@ -67,25 +64,34 @@ function TrelloList({ index, listItem, cards }) {
                   // style={{ backgroundColor: snapshot.isDraggingOver ? 'blue' : 'grey' }}
                   {...provided.droppableProps}
                 >
-                  {cards.map((card, cardIndex) => {
+                  {cards.map((cardItem, cardIndex) => {
                     return (
-                      <SimpleCard 
-                        key={card.id}
-                        index={cardIndex}
-                        card={card}
-                      />
+                      <React.Fragment key={cardItem.id}>
+                        <Draggable draggableId={cardItem.id.toString()} index={cardIndex}>
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              className="card"
+                            >
+                              <SimpleCard
+                                cardItem={cardItem}
+                              />
+                            </div>
+                          )}
+                        </Draggable>
+                      </React.Fragment>
                     )
                   })}
                   {provided.placeholder}
                 </div>
               </Card>
             )}
-            
           </Droppable>
           
         </div>
       )}
-      
     </Draggable>
     
   )
