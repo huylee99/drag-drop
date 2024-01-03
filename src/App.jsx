@@ -68,8 +68,8 @@ function App() {
           ...prevState,
           lists: {
             ...prevState.lists,
-            [source.droppableId]: {
-              ...prevState.lists[source.droppableId],
+            [destination.droppableId]: {
+              ...prevState.lists[destination.droppableId],
               cards: clonedCards
             }
           }
